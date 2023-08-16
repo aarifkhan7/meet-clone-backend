@@ -21,7 +21,10 @@ app.get('/', (req, res)=>{
 
 const socketio = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000"
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:4000"
+        ]
     }
 });
 // Socket events and their handlers
