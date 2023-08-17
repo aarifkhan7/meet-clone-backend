@@ -1,17 +1,23 @@
 class Participant{
     #name;
     #socket;
-    #peerId;
-    constructor(name, skt, pid){
+    // #peerId;
+    constructor(name, skt, pid=0){
         this.#name = name;
         this.#socket = skt;
-        this.#peerId = pid;
+        // this.#peerId = pid;
     }
     getName(){
         return this.#name;
     }
     getSocket(){
         return this.#socket;
+    }
+    getSocketId(){
+        return this.#socket.id;
+    }
+    emit(event, data){
+        this.#socket.emit(event, data);
     }
     sendRemoteId(remoteSocketId, peerID){
         this.#socket.emit('remote-id', {
@@ -23,27 +29,45 @@ class Participant{
 
 class Room{
     #roomId;
-    #st; // set of participants
+    #arr; // array of participants
     constructor(rId){
         this.#roomId = rId;
-        this.#st = new Set();
+        this.#arr = [];
     }
-    add(connObj){
-        this.#st.add(connObj);
+    add(participant){
+        this.#arr.push(participant);
     }
-    remove(connObj){
-        return this.#st.delete(connObj);
+    remove(participantSocketId){
+        let ind = -1;
+        let i = 0;
+        this.#arr.forEach(p => {
+            if(p.getSocketId() == participantSocketId){
+                ind = i;
+            }
+            i++;
+        });
+        if(ind >= 0){
+            this.#arr.splice(ind, 1);
+            return true;
+        }else{
+            return false;
+        }
     }
     getSize(){
-        return this.#st.size;
+        return this.#arr.length;
     }
     sendOffers(pIDArr, senderSocketID){
         let i = 0;
-        this.#st.forEach(function (p) {
+        this.#arr.forEach(function (p) {
             if(p.getSocket().id != senderSocketID){
                 p.sendRemoteId(senderSocketID, pIDArr[i]);
                 i++;
             }
+        })
+    }
+    broadcast(event, data){
+        this.#arr.forEach(function (p) {
+            p.emit(event, data);
         })
     }
 }

@@ -36,7 +36,6 @@ socketio.on("connection", async (socket)=>{
         const newRoomId = randomId(9);
         if(currEnv.createRoom(newRoomId)){
             console.log("Room created: " + newRoomId);
-            currEnv.createRoom(newRoomId);
             socket.emit("createroom-success", {roomId: newRoomId});
         }else{
             console.log("Error in creating room...");
@@ -65,13 +64,43 @@ socketio.on("connection", async (socket)=>{
     });
 
     socket.on("metadata", (data)=>{
-        
+        if(!data.roomId){
+            socket.emit("metadata-failure", {
+                msg: "Syntax errorr"
+            })
+        }else{
+            if(currEnv.getRoomBySocket(socket.id) == data.roomId){
+                socket.emit("metadata-success", {
+                    // tbi
+                });
+            }else{
+                socket.emit("metadata-failure", {
+                    msg: "Unauthorized"
+                });
+            }
+        }
     })
 
     socket.on("checkjoin", (data)=>{
+        // check if the socket is in the given room
         // data
         // ---roomId
         // tbi
+        if(!data.roomId){
+            socket.emit("checkjoin-failure", {
+                msg: "Syntax error"
+            });
+        }else{
+            if(currEnv.getRoomBySocket(socket.id) == data.roomId){
+                socket.emit("checkjoin-success", {
+                    msg: true
+                });
+            }else{
+                socket.emit("checkjoin-success", {
+                    msg: false
+                })
+            }
+        }
     })
 
     socket.on("offers", (data)=>{
@@ -112,6 +141,17 @@ socketio.on("connection", async (socket)=>{
     });
 
     socket.on("disconnect", ()=>{
+        let roomId = currEnv.getRoomBySocket(socket.id);
+        if(roomId){
+            let room = currEnv.getRoom(roomId);
+            if(room.remove(socket.id)){
+                room.broadcast("user-disconnect", {
+                    socketId: socket.id
+                });
+            }else{
+                console.log("Error while removing participant");
+            }
+        }
         console.log("User disconnected, socketId: " + socket.id);
     })
 })
