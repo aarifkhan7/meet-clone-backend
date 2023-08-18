@@ -23,7 +23,8 @@ const socketio = new Server(httpServer, {
     cors: {
         origin: [
             "http://localhost:3000",
-            "http://localhost:4000"
+            "http://localhost:4000",
+            "https://meet-clone-s9i0.onrender.com"
         ]
     }
 });
