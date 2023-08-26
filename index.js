@@ -141,6 +141,21 @@ socketio.on("connection", async (socket)=>{
         socketio.to(data.remoteSocketId).emit("relay-answer", data);
     });
 
+    socket.on("exit-room", ()=>{
+        let roomId = currEnv.getRoomBySocket(socket.id);
+        if(roomId){
+            let room = currEnv.getRoom(roomId);
+            if(room.remove(socket.id)){
+                room.broadcast("user-disconnect", {
+                    socketId: socket.id
+                });
+            }else{
+                console.log("Error while removing participant");
+            }
+        }
+        console.log("User left the room, socketId: " + socket.id + ", roomId: " + roomId);
+    })
+
     socket.on("disconnect", ()=>{
         let roomId = currEnv.getRoomBySocket(socket.id);
         if(roomId){
